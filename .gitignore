@@ -1,0 +1,6 @@
+data
+scratch.ipynb
+.venv/
+__pycache__
+*.egg-info
+weights
