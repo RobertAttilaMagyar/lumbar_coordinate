@@ -4,3 +4,5 @@ scratch.ipynb
 __pycache__
 *.egg-info
 weights
+*.ipynb
+./src/lumbar_coordinate/dataset/cucc.ipynb
