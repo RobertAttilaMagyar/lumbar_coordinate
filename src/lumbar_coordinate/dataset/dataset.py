@@ -10,6 +10,7 @@ preprocess = tt.Compose([
     tt.Grayscale(),
     tt.CenterCrop(256),
     tt.ToTensor(),
+    tt.Normalize(mean=[0.], std = [1.])
 ])
 
 class getData(Dataset):

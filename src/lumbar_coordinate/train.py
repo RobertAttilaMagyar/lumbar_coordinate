@@ -19,7 +19,7 @@ class Trainer:
     def _loss_function(outputs: torch.Tensor, coords: torch.Tensor):
         return ((coords - outputs) ** 2).sum(dim=2).sum(dim=1).mean()
 
-    def _validate(self, model: nn.Module, loss_fn: Callable):
+    def _validate(self, model: nn.Module, loss_fn: Callable)->float:
         model.eval()
         losses = []
         with torch.no_grad():
@@ -29,9 +29,12 @@ class Trainer:
                 vouts = model(vimg)
                 vloss = loss_fn(vouts, vcoords)
                 losses.append(vloss.item())
-        print(f"Average validation loss: {np.mean(losses)}")
+        print(f"Average validation loss: {(mean_loss := np.mean(losses))}")
 
-    def _one_epoch(self, model: nn.Module, optimizer, validate=False):
+        return mean_loss
+    
+
+    def _one_epoch(self, model: nn.Module, optimizer, validate=False)->tuple[float, float]:
         model.to(self._device)
         model.train()
         losses = []
@@ -47,12 +50,12 @@ class Trainer:
             loss.backward()
             optimizer.step()
 
-        print(f"Average training loss in epoch: {np.mean(losses)}")
+        print(f"Average training loss in epoch: {(mean_train_loss := np.mean(losses))}")
         if validate:
-            self._validate(model, self._loss_function)
-
-            pass
-
+            mean_val_loss = self._validate(model, self._loss_function)
+        
+        return mean_train_loss, mean_val_loss
+    
     def _adjust_learning_rate(self, optimizer, epoch):
         if epoch > 1 and epoch%5 == 0:
             for param_group in optimizer.param_groups:
@@ -60,15 +63,21 @@ class Trainer:
 
     def train(self, model: nn.Module, num_epochs=10, validate=True, lr=0.001):
         model.to(self._device)
+        train_history: list[float] = []
+        val_history: list[float] = []
 
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
         for epoch in range(num_epochs):
-            self._adjust_learning_rate(optimizer, epoch)
+            # self._adjust_learning_rate(optimizer, epoch)
             print(f"Epoch #{epoch}")
-            self._one_epoch(model, optimizer=optimizer, validate=validate)
+            mtl, mvl = self._one_epoch(model, optimizer=optimizer, validate=validate)
+            train_history.append(mtl)
+            val_history.append(mvl)
         
         if self._val_loader is not None:
             self._validate(model, self._loss_function)
+
+        return train_history, val_history
 
 
 

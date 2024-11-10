@@ -6,13 +6,24 @@ from torch.utils.data import random_split
 import torch
 from dataclasses import dataclass
 
+import matplotlib.pyplot as plt
+
 
 def main(data_path, epochs):
     whole_ds = getData(data_path)
     train_ds, val_ds, test_ds = random_split(whole_ds, [0.8, 0.1, 0.1])
     trainer = Trainer(train_ds, batch_size=8, val_ds = val_ds)
     model = UNet()
-    trainer.train(model, num_epochs=epochs)
+    train_history, val_history = trainer.train(model, num_epochs=epochs)
+    plt.figure()
+    plt.plot(train_history, label = "Train losses")
+    plt.plot(val_history, label = "Validation losses")
+    plt.title("Loss history during training")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.yscale("log")
+    plt.legend()
+    plt.savefig("train_history_no_adjust.png")
 
     torch.save(model.state_dict(), "unet_relative_target_sgd.pt")
 
