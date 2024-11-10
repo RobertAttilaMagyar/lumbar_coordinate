@@ -24,8 +24,8 @@ class getData(Dataset):
         df["img_paths"] = [(base_path/"data"/f"processed_{row['source']}_jpgs"/row['filename']) for _, row in df.iterrows()]
         df = df.groupby("img_paths").agg(lambda x: list(x))
         self._filenames = list(df.index.values)
-        self._xs = list(df.x.values)
-        self._ys = list(df.y.values)
+        self._xs = list(df.relative_x.values)
+        self._ys = list(df.relative_y.values)
     
     def __getitem__(self, index) -> tuple[torch.Tensor, torch.Tensor]:
         img = preprocess(Image.open(self._filenames[index]))
@@ -40,7 +40,7 @@ class getData(Dataset):
     def visualize(self, index):
         img, coords = self[index]
         plt.imshow(img.permute(1,2,0), cmap = "Greys")
-        plt.scatter(coords[:,0], coords[:, 1], color = "lime")
+        plt.scatter(256*coords[:,0], 256*coords[:, 1], color = "lime")
 
         
 

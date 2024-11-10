@@ -1,8 +1,7 @@
 import argparse
 from lumbar_coordinate.models.unet import UNet
 from lumbar_coordinate.train import Trainer
-from lumbar_coordinate.data import getData
-from lumbar_coordinate.models import UNet
+from lumbar_coordinate.dataset import getData
 from torch.utils.data import random_split
 import torch
 from dataclasses import dataclass
@@ -15,7 +14,7 @@ def main(data_path, epochs):
     model = UNet()
     trainer.train(model, num_epochs=epochs)
 
-    torch.save(model.state_dict(), "unet_sgd_noadj.pt")
+    torch.save(model.state_dict(), "unet_relative_target_sgd.pt")
 
 
 
