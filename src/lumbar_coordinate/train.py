@@ -10,6 +10,8 @@ from typing import Callable
 
 class Trainer:
     def __init__(self, train_ds: Dataset, batch_size: int = 16, val_ds: Dataset = None):
+        self._train_epoch_size: int = len(train_ds)
+        self._val_epoch_size: int = len(val_ds)
         self._dataloader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
         self._device = "cuda:0" if torch.cuda.is_available() else "cpu"
         
@@ -38,7 +40,7 @@ class Trainer:
         model.to(self._device)
         model.train()
         losses = []
-        for img, coords in tqdm(self._dataloader):
+        for img, coords in tqdm(self._dataloader, leave=False):
             img = img.to(self._device)
             coords = coords.to(self._device)
 
@@ -61,18 +63,27 @@ class Trainer:
             for param_group in optimizer.param_groups:
                 param_group['lr'] /=2
 
-    def train(self, model: nn.Module, num_epochs=10, validate=True, lr=0.001):
+    def train(self, model: nn.Module, num_epochs=30, validate=True, lr=0.001):
         model.to(self._device)
         train_history: list[float] = []
         val_history: list[float] = []
+        best_validation_loss = torch.inf
 
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-        for epoch in range(num_epochs):
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max = 10)
+        for epoch in (pbar:=tqdm(range(num_epochs))):
+            pbar.set_description(f"Currently at {epoch}, lr: {scheduler.get_last_lr()[0]}")
             # self._adjust_learning_rate(optimizer, epoch)
-            print(f"Epoch #{epoch}")
             mtl, mvl = self._one_epoch(model, optimizer=optimizer, validate=validate)
+            
             train_history.append(mtl)
             val_history.append(mvl)
+
+            if mvl < best_validation_loss:
+                best_validation_loss = mvl
+                torch.save(model.state_dict(), "best-model.pt")
+
+            scheduler.step()
         
         if self._val_loader is not None:
             self._validate(model, self._loss_function)

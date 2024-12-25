@@ -2,6 +2,32 @@ import torch
 import torch.nn as nn
 
 
+class Conv2dReLU(nn.Sequential):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int | tuple[int, ...],
+        stride: int | tuple[int, ...] = 1,
+        padding: int | tuple[int, ...] = 0,
+        dropout: float = 0.0,
+        with_batchnorm: bool = False,
+    ):
+        dout = nn.Dropout(p=dropout) if dropout > 0 else nn.Identity()
+        conv = nn.Conv2d(
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride=stride,
+            bias=not (with_batchnorm),
+            padding=padding,
+        )
+        bn = nn.BatchNorm2d(out_channels) if with_batchnorm else nn.Identity()
+        relu = nn.ReLU(inplace=True)
+
+        super(Conv2dReLU, self).__init__(dout, conv, bn, relu)
+
+
 class DoubleConv(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, dropout: float = 0):
         super().__init__()

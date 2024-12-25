@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 import matplotlib.pyplot as plt
 
+torch.cuda.empty_cache()
 
 def main(data_path, epochs):
     whole_ds = getData(data_path)
@@ -23,13 +24,13 @@ def main(data_path, epochs):
     plt.ylabel("Loss")
     plt.yscale("log")
     plt.legend()
-    plt.savefig("train_history_no_adjust.png")
+    plt.savefig("train_history_unet_cos_annealing_Tmax10.png")
 
-    torch.save(model.state_dict(), "unet_relative_target_sgd.pt")
+    torch.save(model.state_dict(), "unet_cos_annealing_Tmax10.pt")
 
 
 
-main("/home/ad.adasworks.com/attila.magyar/Desktop/lumbar_coordinate/data", epochs=20)
+main("/home/ad.adasworks.com/attila.magyar/Desktop/lumbar_coordinate/data", epochs=50)
 
 # if __name__ == "__main__":
 #     parser = argparse.ArgumentParser(add_help=True)

@@ -1,5 +1,5 @@
 from torch.utils.data import Dataset
-import torchvision.transforms as tt
+import torchvision.transforms.v2 as tt
 from pathlib import Path
 import pandas as pd
 import torch
@@ -12,6 +12,15 @@ preprocess = tt.Compose([
     tt.ToTensor(),
     tt.Normalize(mean=[0.], std = [1.])
 ])
+
+train_preprocess = tt.Compose(
+    [
+        tt.Grayscale(),
+        tt.ToTensor(),
+        tt.Normalize(mean=[0.], std = [1.]),
+        tt.GaussianBlur(3, sigma=(0.1, 2.0))
+    ]
+)
 
 class getData(Dataset):
     def __init__(self, base_path: str|Path):
@@ -29,7 +38,7 @@ class getData(Dataset):
         self._ys = list(df.relative_y.values)
     
     def __getitem__(self, index) -> tuple[torch.Tensor, torch.Tensor]:
-        img = preprocess(Image.open(self._filenames[index]))
+        img = train_preprocess(Image.open(self._filenames[index]))
         xs = self._xs[index]
         ys = self._ys[index]
         target = torch.Tensor([xs, ys]).T
